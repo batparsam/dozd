@@ -10,6 +10,7 @@ $date = date("Y/m/d");
 
 $url = "https://t.me/s/iProxy_up";
 
+// خواندن سورس HTML
 $curl = curl_init();
 curl_setopt_array($curl, [
     CURLOPT_URL => $url,
@@ -23,34 +24,24 @@ curl_setopt_array($curl, [
 $html = curl_exec($curl);
 curl_close($curl);
 
-// برای نمایش درست حروف و علامت‌ها
+// تبدیل کدهای HTML مثل &#x3A; به :
 $decoded_html = html_entity_decode($html);
 
-// استخراج پیام‌های داخل <div class="tgme_widget_message_text">...</div>
+// گرفتن تمام پیام‌های متنی داخل DIV مربوط به پیام‌ها
 preg_match_all('/<div class="tgme_widget_message_text js-message_text" dir="auto">(.*?)<\/div>/s', $decoded_html, $matches);
 
-$found_message = null;
-
-foreach (array_reverse($matches[1]) as $textBlock) {
-    $plain = strip_tags($textBlock); // حذف تگ‌های HTML
-    if (mb_stripos($plain, "کانفیگ") !== false) {
-        $found_message = $plain;
-        break;
-    }
-}
-
-if (!$found_message) {
-    $msg = "❌ هیچ پیامی با کلمه «کانفیگ» پیدا نشد.";
+if (!empty($matches[1])) {
+    $latest = strip_tags(end($matches[1])); // آخرین پیام
+    $msg  = "📡 پیام جدید از @iProxy_up:\n";
+    $msg .= "━━━━━━━━━━━━━━━━━━━━━━\n";
+    $msg .= $latest . "\n";
+    $msg .= "━━━━━━━━━━━━━━━━━━━━━━\n";
+    $msg .= "📅 {$date}   ⏰ {$time}\n📡 @VPNByBaT";
 } else {
-    $msg  = "📡 جدیدترین پیام دارای «کانفیگ» از iProxy:\n";
-    $msg .= "━━━━━━━━━━━━━━━━━━━━━━\n";
-    $msg .= $found_message . "\n";
-    $msg .= "━━━━━━━━━━━━━━━━━━━━━━\n";
-    $msg .= "⏰ {$time}   📅 {$date}\n";
-    $msg .= "📢 @iProxy_up → 📬 @VPNByBaT";
+    $msg = "❌ هیچ پیام متنی پیدا نشد.";
 }
 
-// ارسال به تلگرام
+// ارسال پیام
 $data = [
     'chat_id' => $channel,
     'text' => $msg,
@@ -65,4 +56,4 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
 curl_close($ch);
 
-echo "📩 RESPONSE: $response\n";
+echo "📤 Response: $response\n";
